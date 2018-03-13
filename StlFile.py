@@ -183,49 +183,91 @@ def square():
                    (0.0, 0.0, 1.0))
     return c
 
-def sphere(edgeCount=16):
+def sphere(eC=16):
+    from math import cos, sin, pi
+    stl = StlFile('sphere')
+    cx, cy = [], []
+
+    for i in range(eC):
+        cx.append(cos(2*pi / eC*i))
+        cy.append(sin(2*pi / eC*i))
+
+    for i in range(eC+1):
+        if i == 0:
+            #cy[1] = sin(2*pi / eC)
+            #cx[1] = cos(2*pi / eC)
+            for j in range(eC):
+                stl.add_triangle((0.0, 0.0, -1.0),
+                               (cx[j]*cx[1], cy[j]*cx[1], cy[1] ),
+                               (cx[j-1]*cx[1], cy[j-1]*cx[1], cy[1]),
+                               normal=(cx[j], cy[j], cy[1]))
+        elif i == eC:
+            #cy[i-1] = sin(2*pi / eC*(eC-1))
+            #cx[i-1] = cos(2*pi / eC*(eC-1))
+            for j in range(eC):
+                stl.add_triangle((0.0, 0.0, 1.0),
+                               (cx[j]*cx[i-1], cy[j]*cx[i-1], cy[i-1]),
+                               (cx[j-1]*cx[i-1], cy[j-1]*cx[i-1], cy[i-1]),
+                               normal=(cx[j], cy[j], cy[i-1]))
+        else:
+            #cy[i] = sin(2*pi / eC*i)
+            #cx[i] = cos(2*pi / eC*i)
+            for j in range(eC):
+                stl.add_triangle(   (cx[j]*cx[i], cy[j]*cx[i], cy[i]),
+                                    (cx[j-1]*cx[i], cy[j-1]*cx[i], cy[i]),
+                                    (cx[j-1]*cx[i-1],cy[j-1]*cx[i-1], cy[i-1]),
+                                    normal=(cx[j-1]*cx[i-1],cy[j-1]*cx[i-1], cy[i-1]))
+                stl.add_triangle(   (cx[j]*cx[i], cy[j]*cx[i], cy[i]),
+                                    (cx[j]*cx[i-1], cy[j]*cx[i-1], cy[i]),
+                                    (cx[j-1]*cx[i-1],cy[j-1]*cx[i-1], cy[i-1]),
+                                    normal=(cx[j-1]*cx[i-1],cy[j-1]*cx[i-1], cy[i-1]))
+    return stl
+
+
+def sphere2(edgeCount=16):
     from math import cos, sin, pi
     c = StlFile('sphere')
     #x0 = cos(2*pi / edgeCount)
     #y0 = sin(2*pi / edgeCount)
     x0, y0 = 1.0, 0.0
-    a0, b0 = 0.0, 0.0
-    z0 = -1.0
+    a, b = a0, b0 = 0.0, 0.0
+    zX0 = -1.0
+    zY0 = 0.0
     preCircleX=[0.0]*edgeCount
     preCircleY=[0.0]*edgeCount
     for j in range(edgeCount+1):
-        size = 1 - edgeCount / abs(j-edgeCount/2)
-        z = cos(2*pi/ edgeCount * j)
+        zX = cos(2*pi/ edgeCount * j)
+        zY = sin(2*pi/ edgeCount * j)
         for i in range(edgeCount+1):
-            x = cos(2 * pi / edgeCount * i)
-            y = sin(2 * pi / edgeCount * i)
+            x = cos(2 * pi / edgeCount * i)*zY
+            y = sin(2 * pi / edgeCount * i)*zY
 
             if j == 0:
-                c.add_triangle((0.0, 0.0, z0),
-                               (x, y, z),
-                               (x0, y0, z),
-                               normal=(x, y, z))
+                c.add_triangle((0.0, 0.0, zX0),
+                               (x, y, zX),
+                               (x0, y0, zX),
+                               normal=(x, y, zX))
             elif j == edgeCount:
-                z0 = 1.0
-                c.add_triangle((0.0, 0.0, z0),
-                               (x, y, z),
-                               (x0, y0, z),
-                               normal=(x, y, z))
+                zX0 = 1.0
+                c.add_triangle((0.0, 0.0, zX0),
+                               (x, y, zX),
+                               (x0, y0, zX),
+                               normal=(x, y, zX))
             else:
-                a = cos(2*pi / edgeCount * (i+1))
-                b = sin(2*pi / edgeCount * (i+1))
-                c.add_triangle((a, b, z0),
-                               (x, y, z),
-                               (x0, y0, z),
-                               normal=(x, y, z))
-                c.add_triangle((a, b, z0),
-                               (a0, a0, z0),
-                               (x, y, z),
-                               normal=(x, y, z))
+                a = cos(2*pi / edgeCount * i)*zY0
+                b = sin(2*pi / edgeCount * i)*zY0
+                c.add_triangle((a, b, zX0),
+                               (x, y, zX),
+                               (x0, y0, zX),
+                               normal=(x, y, zX))
+                c.add_triangle((a, b, zX0),
+                               (a0, a0, zX0),
+                               (x, y, zX),
+                               normal=(x, y, zX))
 
             x0, y0 = x, y
             a0, b0 = a, b
-        z0 = z
+        zX0, zY0 = zX, zY
     return c
 
 def cylinder(edgeCount=16):
@@ -254,12 +296,10 @@ def cylinder(edgeCount=16):
         x0, y0 = x, y
     return c
 
-def nurb():
-    return StlFile('nurb')
-
 
 if __name__ == '__main__':
     c = cylinder()
+    #c = sphere()
     c.save('D:/Users/DAN85_000/Desktop/1a.stl')
     c.move(17.0, 'x')
     c.save('D:/Users/DAN85_000/Desktop/1b.stl')
